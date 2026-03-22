@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E '\\\\.\\(py|txt|toml|yml|yaml|env\\)$')",
+      "Bash(find /c/Users/User/PycharmProjects/FINMAN -type f \\\\\\(-name *.py -o -name *.txt -o -name *.toml -o -name *.yaml -o -name *.yml -o -name .env* -o -name *.json -o -name *.md \\\\\\))"
+    ]
+  }
+}
