@@ -18,6 +18,7 @@ import streamlit as st
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
 from langgraph.types import Command
+from utils.schema_annotations import save_annotations
 
 load_dotenv()
 
@@ -113,6 +114,7 @@ def _run_schema_scan():
         )
     else:
         st.session_state.schema_loaded = True
+        save_annotations(schema)
         tables = ", ".join(f"`{t}`" for t in schema) if schema else "_none found_"
         add_message(
             "assistant",
@@ -139,11 +141,12 @@ def _resume_after_clarification():
     st.session_state.pending_clarifications = []
     st.session_state.clarification_answers = {}
 
+    save_annotations(schema)
     tables = ", ".join(f"`{t}`" for t in schema) if schema else "_none_"
     add_message(
         "assistant",
-        f"Thank you! Column descriptions updated. Tables: {tables}.\n\n"
-        "You can now ask me questions about your data.",
+        f"Thank you! Column descriptions saved to `schema_annotations.md`. "
+        f"Tables: {tables}.\n\nYou can now ask me questions about your data.",
     )
 
 
@@ -173,23 +176,24 @@ def _run_query(user_query: str):
         return
 
     error = final_state.get("error")
-    df = final_state.get("query_result")
+    result_json: str | None = final_state.get("query_result")  # already a JSON string
     sql = final_state.get("generated_sql", "")
     viz_json = final_state.get("viz_figure")
 
-    if error and df is None:
+    if error and not result_json:
         add_message("assistant", f"I encountered an error:\n```\n{error}\n```")
         return
 
     parts: list[str] = []
     if sql:
         parts.append(f"**Generated SQL:**\n```sql\n{sql}\n```")
-    if df is not None:
-        parts.append(f"**Result:** {len(df)} row(s) returned.")
+    if result_json:
+        import pandas as pd
+        row_count = len(pd.read_json(result_json, orient="records"))
+        parts.append(f"**Result:** {row_count} row(s) returned.")
 
     content = "\n\n".join(parts) if parts else "Query returned no results."
-    df_json = df.to_json(orient="records") if df is not None and not df.empty else None
-    add_message("assistant", content, figure=viz_json, dataframe_json=df_json)
+    add_message("assistant", content, figure=viz_json, dataframe_json=result_json)
 
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────

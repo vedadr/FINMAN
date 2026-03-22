@@ -25,7 +25,7 @@ def data_fetcher(state: AgentState) -> dict:
     try:
         df = execute_sql_to_df(sql)
         return {
-            "query_result": df,
+            "query_result": df.to_json(orient="records"),
             "error": None,
             "sql_retry_count": 0,
         }

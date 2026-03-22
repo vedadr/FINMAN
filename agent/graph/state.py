@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Annotated, Any
+from typing import Annotated
 from typing_extensions import TypedDict
 from langgraph.graph.message import add_messages
 
@@ -16,7 +16,7 @@ class AgentState(TypedDict):
     pending_clarifications: list[dict]              # [{table, column, type, question}]
     user_query: str                                 # latest plain-English question
     generated_sql: str                              # SQL produced by sql_generator
-    query_result: Any                               # pandas DataFrame or None
+    query_result: str | None                        # query rows serialized as JSON (records format)
     viz_request: str                                # user's visualization intent
     error: str | None                               # last execution error
     sql_retry_count: int                            # number of SQL retries so far

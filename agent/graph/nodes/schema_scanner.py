@@ -14,6 +14,7 @@ from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from graph.state import AgentState
 from tools.supabase_client import fetch_schema_rows
 from utils.schema_utils import build_schema_from_rows, is_ambiguous_column
+from utils.schema_annotations import load_annotations
 
 _llm = ChatOpenAI(model="gpt-4o", temperature=0)
 
@@ -50,33 +51,49 @@ def schema_scanner(state: AgentState) -> dict:
 
     schema = build_schema_from_rows(rows)
 
-    # Build prompt payload: all columns
+    # Apply any previously saved annotations — columns with saved descriptions
+    # are marked as non-ambiguous and won't be included in clarification questions.
+    saved = load_annotations()
+    for table, cols in schema.items():
+        for col in cols:
+            key = f"{table}.{col}"
+            if key in saved:
+                schema[table][col]["description"] = saved[key]
+                schema[table][col]["ambiguous"] = False
+
+    # Build prompt payload: only columns without a saved description
     column_list_lines = []
     for table, cols in schema.items():
         for col, meta in cols.items():
-            column_list_lines.append(f"{table}.{col} ({meta['type']})")
+            if not meta.get("description"):
+                column_list_lines.append(f"{table}.{col} ({meta['type']})")
 
-    column_list = "\n".join(column_list_lines)
-    human_msg = HumanMessage(content=f"Infer descriptions for these columns:\n\n{column_list}")
+    inferred: dict = {}
+    if column_list_lines:
+        column_list = "\n".join(column_list_lines)
+        human_msg = HumanMessage(content=f"Infer descriptions for these columns:\n\n{column_list}")
+        response = _llm.invoke([SystemMessage(content=_SYSTEM), human_msg])
+        raw = response.content.strip()
 
-    response = _llm.invoke([SystemMessage(content=_SYSTEM), human_msg])
-    raw = response.content.strip()
+        # Strip markdown fences if present
+        if raw.startswith("```"):
+            raw = "\n".join(raw.split("\n")[1:])
+            if raw.endswith("```"):
+                raw = raw[: raw.rfind("```")]
 
-    # Strip markdown fences if present
-    if raw.startswith("```"):
-        raw = "\n".join(raw.split("\n")[1:])
-        if raw.endswith("```"):
-            raw = raw[: raw.rfind("```")]
-
-    try:
-        inferred: dict = json.loads(raw)
-    except json.JSONDecodeError:
-        inferred = {}
+        try:
+            inferred = json.loads(raw)
+        except json.JSONDecodeError:
+            inferred = {}
 
     pending_clarifications: list[dict] = []
 
     for table, cols in schema.items():
         for col, meta in cols.items():
+            # Column already resolved from saved annotations — skip
+            if meta.get("description") and not meta.get("ambiguous"):
+                continue
+
             key = f"{table}.{col}"
             info = inferred.get(key, {})
             description = info.get("description", "")

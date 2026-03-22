@@ -2,7 +2,14 @@
   "permissions": {
     "allow": [
       "Bash(grep -E '\\\\.\\(py|txt|toml|yml|yaml|env\\)$')",
-      "Bash(find /c/Users/User/PycharmProjects/FINMAN -type f \\\\\\(-name *.py -o -name *.txt -o -name *.toml -o -name *.yaml -o -name *.yml -o -name .env* -o -name *.json -o -name *.md \\\\\\))"
+      "Bash(find /c/Users/User/PycharmProjects/FINMAN -type f \\\\\\(-name *.py -o -name *.txt -o -name *.toml -o -name *.yaml -o -name *.yml -o -name .env* -o -name *.json -o -name *.md \\\\\\))",
+      "Bash(where streamlit:*)",
+      "Bash(python -c \"import streamlit; print\\(streamlit.__file__\\)\")",
+      "Bash(python -m streamlit --version)",
+      "Bash(pip show:*)",
+      "Bash(python -c \"import psycopg2; print\\(''''ok'''', psycopg2.__version__\\)\")",
+      "Bash(python:*)",
+      "Bash(uv add:*)"
     ]
   }
 }

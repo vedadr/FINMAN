@@ -39,10 +39,15 @@ Sample rows (up to 5):
 
 
 def visualizer(state: AgentState) -> dict:
-    df: pd.DataFrame | None = state.get("query_result")
+    query_result = state.get("query_result")
     viz_request = state.get("viz_request") or state.get("user_query", "")
 
-    if df is None or df.empty:
+    if not query_result:
+        return {"error": "No data available to visualize."}
+
+    df = pd.read_json(query_result, orient="records")
+
+    if df.empty:
         return {"error": "No data available to visualize."}
 
     df_info = str(df.dtypes.to_string())

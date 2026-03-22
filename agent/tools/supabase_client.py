@@ -1,9 +1,13 @@
 """
 Supabase client + SQL execution helpers.
 
+Authentication uses the new Supabase API key format (Settings → API):
+  SUPABASE_SECRET_KEY      — server-side secret key (bypasses RLS), preferred
+  SUPABASE_PUBLISHABLE_KEY — client-side publishable key (respects RLS), fallback
+
 Two modes for raw SQL execution:
   1. Direct Postgres connection via SUPABASE_DB_URL  (preferred)
-     Format: postgresql://postgres:<password>@db.<project>.supabase.co:5432/postgres
+     Format: postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres
   2. Supabase RPC fallback — requires a helper function created in your DB:
 
      CREATE OR REPLACE FUNCTION execute_query(query text)
@@ -29,7 +33,9 @@ from supabase import create_client, Client
 @functools.lru_cache(maxsize=1)
 def get_client() -> Client:
     url = os.environ["SUPABASE_URL"]
-    key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
+    # Use the Secret key for server-side access (bypasses RLS).
+    # Falls back to Publishable key for read-only / RLS-restricted access.
+    key = os.environ.get("SUPABASE_SECRET_KEY") or os.environ["SUPABASE_PUBLISHABLE_KEY"]
     return create_client(url, key)
 
 

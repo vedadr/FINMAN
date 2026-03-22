@@ -101,8 +101,9 @@ cp .env.example .env
 # Edit .env and fill in:
 #   OPENAI_API_KEY
 #   SUPABASE_URL
-#   SUPABASE_SERVICE_ROLE_KEY
-#   SUPABASE_DB_URL  (recommended — enables direct psycopg2 SQL execution)
+#   SUPABASE_SECRET_KEY       (Settings → API → Secret key)
+#   SUPABASE_PUBLISHABLE_KEY  (Settings → API → Publishable key)
+#   SUPABASE_DB_URL           (recommended — enables direct psycopg2 SQL execution)
 
 # 3. Run
 streamlit run main.py
