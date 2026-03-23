@@ -12,7 +12,7 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from graph.state import AgentState
 from utils.schema_utils import format_schema_for_prompt
 
-_llm = ChatOpenAI(model="gpt-4o", temperature=0)
+_llm = ChatOpenAI(model="gpt-5.4-nano", temperature=0)
 
 _BLOCKED_KEYWORDS = re.compile(
     r"\b(INSERT|UPDATE|DELETE|DROP|TRUNCATE|ALTER|CREATE|REPLACE|MERGE)\b",
