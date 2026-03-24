@@ -131,6 +131,78 @@ $$;
 
 ---
 
+## Deployment — GCP Free Tier
+
+The `terraform/` directory at the repo root contains a Terraform script that provisions a **free** Google Cloud VM to host the app permanently.
+
+**Free tier resources used:**
+- 1 × `e2-micro` non-preemptible instance (us-west1 / us-central1 / us-east1)
+- 30 GB `pd-standard` boot disk
+- Ephemeral external IP
+
+### Prerequisites
+
+- [Terraform](https://developer.hashicorp.com/terraform/install) ≥ 1.5
+- [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) (`gcloud`)
+- A GCP project with the Compute Engine API enabled
+
+### Steps
+
+```bash
+# 1. Authenticate
+gcloud auth application-default login
+
+# 2. Configure variables
+cd terraform
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars — fill in project_id and all secrets
+
+# 3. Deploy
+terraform init
+terraform plan
+terraform apply
+```
+
+After `apply`, Terraform prints:
+
+| Output | Description |
+|---|---|
+| `app_url` | URL to open the Streamlit app in the browser |
+| `ssh_command` | `gcloud compute ssh` command to log into the VM |
+| `deploy_command` | `gcloud compute scp` command to copy app files |
+| `startup_log_command` | Stream the VM bootstrap log |
+
+### Deploy app files (if no `repo_url` set)
+
+```bash
+# From the repo root — run the deploy_command shown in terraform output:
+gcloud compute scp --recurse ./agent finman-app:/opt/finman/ --zone=us-central1-a
+
+# Then start the service on the VM:
+gcloud compute ssh finman-app --zone=us-central1-a \
+  --command="sudo systemctl start finman"
+```
+
+### Useful VM commands
+
+```bash
+# Check service status
+sudo systemctl status finman
+
+# View live logs
+sudo journalctl -u finman -f
+
+# Restart after a code update
+sudo systemctl restart finman
+
+# View startup script log
+sudo cat /var/log/finman-startup.log
+```
+
+> **Note:** The VM has 1 GB RAM. A 1 GB swap file is created automatically by the startup script to prevent out-of-memory crashes during dependency installation and heavy LLM calls.
+
+---
+
 ## Future Development
 
 ### 1. Multi-turn conversational memory

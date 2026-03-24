@@ -9,7 +9,16 @@
       "Bash(pip show:*)",
       "Bash(python -c \"import psycopg2; print\\(''''ok'''', psycopg2.__version__\\)\")",
       "Bash(python:*)",
-      "Bash(uv add:*)"
+      "Bash(uv add:*)",
+      "Bash(uv python:*)",
+      "Bash(uv venv:*)",
+      "Bash(uv pip:*)",
+      "Bash(.venv/Scripts/dbt deps:*)",
+      "Bash(.venv/Scripts/dbt seed:*)",
+      "Bash(.venv/Scripts/dbt run:*)",
+      "Bash(.venv/Scripts/dbt test:*)",
+      "Read(//c/Users/User/PycharmProjects/FINMAN//**)",
+      "Read(//c/Users/User/PycharmProjects/FINMAN/terraform//**)"
     ]
   }
 }
