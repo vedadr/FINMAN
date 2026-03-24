@@ -41,13 +41,15 @@ def get_client() -> Client:
 
 # ── Schema introspection ──────────────────────────────────────────────────────
 
-def fetch_schema_rows() -> list[dict]:
+def fetch_schema_rows(schema: str | None = None) -> list[dict]:
     """
-    Return column metadata for all public tables.
+    Return column metadata for all tables in the given schema.
+    Defaults to the DB_SCHEMA env var, then 'dbt_dev_marts'.
     Uses direct SQL if SUPABASE_DB_URL is set, otherwise falls back to
     the Supabase RPC execute_query function.
     """
-    sql = """
+    schema = schema or os.environ.get("DB_SCHEMA", "dbt_dev_marts")
+    sql = f"""
         SELECT
             table_name,
             column_name,
@@ -55,7 +57,7 @@ def fetch_schema_rows() -> list[dict]:
             is_nullable,
             column_default
         FROM information_schema.columns
-        WHERE table_schema = 'public'
+        WHERE table_schema = '{schema}'
         ORDER BY table_name, ordinal_position
     """
     return execute_sql(sql)

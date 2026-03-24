@@ -5,6 +5,7 @@ Takes the user's plain-English query + full schema context and asks GPT-4o
 to produce a safe SELECT-only SQL statement.
 """
 from __future__ import annotations
+import os
 import re
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -26,7 +27,8 @@ Your job: translate the user's plain-English question into a single valid SELECT
 Rules:
 - Output ONLY the raw SQL — no markdown, no explanation, no code fences.
 - Use only SELECT statements. Never use INSERT, UPDATE, DELETE, DROP, TRUNCATE, ALTER, CREATE.
-- Use table and column names exactly as provided in the schema.
+- Always qualify every table name with the schema prefix: {db_schema}.<table_name>.
+- Use column names exactly as provided in the schema.
 - Prefer readable column aliases (e.g. AS "Total Revenue").
 - If the question is ambiguous, make a reasonable assumption and proceed.
 - If an error was reported from a previous attempt, fix it.
@@ -42,7 +44,8 @@ def sql_generator(state: AgentState) -> dict:
     user_query = state.get("user_query", "")
     error = state.get("error")
 
-    system_prompt = _SYSTEM.format(schema=schema_text)
+    db_schema = os.environ.get("DB_SCHEMA", "dbt_dev_marts")
+    system_prompt = _SYSTEM.format(schema=schema_text, db_schema=db_schema)
 
     user_content = user_query
     if error:

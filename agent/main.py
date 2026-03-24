@@ -12,6 +12,75 @@ import os
 import uuid
 import json
 import re
+from pathlib import Path
+
+_ASSETS = Path(__file__).parent / "assets"
+
+
+def _prepare_logo() -> Path:
+    """Return path to logo with transparent background, generating it once if needed."""
+    out = _ASSETS / "logo_transparent.png"
+    if out.exists():
+        return out
+    import numpy as np
+    from PIL import Image
+    img = Image.open(_ASSETS / "logo.png").convert("RGBA")
+    data = np.array(img)
+    white = (data[:, :, 0] > 200) & (data[:, :, 1] > 200) & (data[:, :, 2] > 200)
+    data[white, 3] = 0
+    img = Image.fromarray(data)
+    if img.width < 50 or img.height < 50:
+        scale = max(50 / img.width, 50 / img.height)
+        img = img.resize((int(img.width * scale), int(img.height * scale)), Image.LANCZOS)
+    img.save(out, "PNG")
+    return out
+
+
+_LOGO = _prepare_logo()
+
+# ── Theme definitions ─────────────────────────────────────────────────────────
+
+_THEMES = {
+    "AI Assistant — Light": """
+        <style>
+        [data-testid="stAppViewContainer"], [data-testid="stMain"] {
+            background-color: #F5F3FF; color: #1C1917;
+        }
+        [data-testid="stSidebar"] { background-color: #EDE9FE; }
+        [data-testid="stHeader"] { background-color: #F5F3FF; }
+        .stChatInput textarea, .stTextInput input {
+            background-color: #fff; color: #1C1917;
+        }
+        .stButton > button {
+            background-color: #7C3AED; color: #fff; border: none;
+        }
+        .stButton > button:hover { background-color: #6D28D9; }
+        </style>
+    """,
+    "AI Assistant — Dark": """
+        <style>
+        [data-testid="stAppViewContainer"], [data-testid="stMain"] {
+            background-color: #0D1117; color: #E6EDF3;
+        }
+        [data-testid="stSidebar"] { background-color: #161B22; }
+        [data-testid="stHeader"] { background-color: #0D1117; }
+        .stChatInput textarea, .stTextInput input {
+            background-color: #21262D; color: #E6EDF3;
+        }
+        .stMarkdown, .stText, p, h1, h2, h3, label {
+            color: #E6EDF3 !important;
+        }
+        .stButton > button {
+            background-color: #A78BFA; color: #0D1117; border: none;
+        }
+        .stButton > button:hover { background-color: #9333EA; color: #fff; }
+        [data-testid="stChatMessage"] {
+            background-color: #161B22;
+        }
+        [data-testid="stExpander"] { background-color: #161B22; }
+        </style>
+    """,
+}
 
 import plotly.graph_objects as go
 import streamlit as st
@@ -25,7 +94,7 @@ load_dotenv()
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="FINMAN Data Agent",
-    page_icon="📊",
+    page_icon=str(_ASSETS / "favicon.png"),
     layout="wide",
 )
 
@@ -198,8 +267,18 @@ def _run_query(user_query: str):
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 
+st.logo(str(_LOGO), icon_image=str(_ASSETS / "favicon.png"), size="large")
+
+# ── Theme selector ────────────────────────────────────────────────────────────
+
 with st.sidebar:
-    st.title("FINMAN Agent")
+    selected_theme = st.selectbox(
+        "Theme",
+        options=list(_THEMES.keys()),
+        index=0,
+        label_visibility="collapsed",
+    )
+    st.markdown(_THEMES[selected_theme], unsafe_allow_html=True)
     st.markdown("---")
 
     supabase_url = os.environ.get("SUPABASE_URL", "")
@@ -231,7 +310,7 @@ with st.sidebar:
 
 # ── Main chat area ────────────────────────────────────────────────────────────
 
-st.title("📊 FINMAN Data Agent")
+st.title("FINMAN Data Agent")
 
 # Render full chat history
 for msg in st.session_state.messages:

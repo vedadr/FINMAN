@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="../logo.png" alt="FINMAN logo" width="120" />
+</p>
+
 # FINMAN Data Agent
 
 A conversational data agent that lets you query your Supabase database in plain English, infer meaning from your schema, and visualize results interactively — no SQL knowledge required.
