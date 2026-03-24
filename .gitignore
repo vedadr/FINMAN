@@ -1,0 +1,38 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# uv
+.python-version
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Agent runtime files
+schema_annotations.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+
+schema_annotations.md
+agent/.env
+agent/schema_annotations.md

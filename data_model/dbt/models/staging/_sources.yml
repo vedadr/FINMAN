@@ -1,0 +1,74 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Raw tables loaded directly from the bank data ingestion pipeline.
+    schema: public
+    tables:
+      - name: bank_transactions
+        description: >
+          Main bank transaction table. Each row represents one line item from
+          a bank statement email, including account balances, transaction amounts,
+          and statement period metadata.
+        columns:
+          - name: id
+            description: Surrogate primary key.
+            tests: [unique, not_null]
+          - name: datum_transakcije
+            description: Date the transaction occurred.
+          - name: datum_obrade
+            description: Date the transaction was processed by the bank.
+          - name: iznos_transakcije
+            description: Absolute transaction amount in the transaction currency.
+          - name: uplata_trosak_km
+            description: Signed net amount in BAM. Positive = credit, negative = debit.
+          - name: saldo_racuna
+            description: Running account balance after this transaction.
+          - name: opis
+            description: Free-text transaction description as provided by the bank.
+          - name: valuta_transakcije
+            description: Currency code for the transaction.
+          - name: broj_racuna
+            description: Account number (local format).
+          - name: iban
+            description: International Bank Account Number.
+          - name: period_od
+            description: Start date of the bank statement period this row belongs to.
+          - name: period_do
+            description: End date of the bank statement period this row belongs to.
+          - name: prethodno_stanje
+            description: Opening balance for the statement period.
+          - name: konacno_stanje
+            description: Closing balance for the statement period.
+          - name: odobreni_limit
+            description: Approved overdraft limit on the account.
+          - name: grupa
+            description: Transaction group/type code as classified by the bank.
+          - name: created_at
+            description: Timestamp when the row was inserted.
+
+      - name: tansakcije_09_19
+        description: >
+          Older transaction export (pre-2020). Different schema from the main table —
+          unified at staging layer. Note: table name has a typo ("tansakcije").
+        columns:
+          - name: promet_po_partiji
+            description: Transaction sequence number (used as surrogate ID).
+          - name: datum_proc
+            description: Processing date of the transaction.
+          - name: iznos_km
+            description: Signed net amount in BAM.
+          - name: iznos_valuta
+            description: Amount in the original transaction currency.
+          - name: valuta
+            description: Currency code.
+          - name: opis1
+            description: Primary transaction description.
+          - name: opis2
+            description: Secondary transaction description.
+          - name: opis3_provizija
+            description: Tertiary description, often contains commission/fee details.
+          - name: vrsta_transakcije
+            description: Transaction type code.
+          - name: na_partiju
+            description: Destination account number.

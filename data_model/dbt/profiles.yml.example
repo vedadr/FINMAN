@@ -1,0 +1,14 @@
+finman:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: aws-0-<region>.pooler.supabase.com
+      port: 6543
+      user: postgres.<project-ref>
+      password: <password>
+      dbname: postgres
+      schema: dbt_dev
+      threads: 4
+      keepalives_idle: 0
+      connect_timeout: 10

@@ -1,0 +1,88 @@
+version: 2
+
+models:
+  - name: fct_transactions
+    description: >
+      Enriched transaction fact table. Combines both source tables, adds date
+      dimensions, income/expense flags, and a spending category matched from the
+      transaction_categories seed via keyword lookup.
+    columns:
+      - name: transaction_id
+        tests: [not_null]
+      - name: transaction_date
+        tests: [not_null]
+      - name: net_amount_bam
+        description: Signed amount in BAM. Positive = income, negative = expense.
+      - name: is_income
+        description: True when net_amount_bam > 0.
+      - name: is_expense
+        description: True when net_amount_bam < 0.
+      - name: category
+        description: >
+          Spending category derived from keywords in transaction_categories seed.
+          Defaults to "Uncategorised" when no keyword matches.
+
+  - name: agg_daily_cashflow
+    description: Daily aggregation of income, expenses, and net cashflow across all accounts.
+    columns:
+      - name: transaction_date
+        tests: [unique, not_null]
+      - name: total_income
+        description: Sum of all credits on this date.
+      - name: total_expense
+        description: Sum of absolute values of all debits on this date.
+      - name: net_cashflow
+        description: total_income minus total_expense.
+
+  - name: agg_monthly_cashflow
+    description: >
+      Monthly cashflow summary with month-over-month percentage changes for both
+      net cashflow and total expenses.
+    columns:
+      - name: month
+        tests: [unique, not_null]
+      - name: mom_pct_change
+        description: Month-over-month % change in net cashflow.
+      - name: mom_expense_pct_change
+        description: Month-over-month % change in total expenses.
+
+  - name: agg_balance_over_time
+    description: >
+      Daily closing balance per account, sourced from the running_balance column
+      in bank_transactions. Useful for plotting account balance trends.
+    columns:
+      - name: transaction_date
+        tests: [not_null]
+      - name: account_number
+        tests: [not_null]
+      - name: running_balance
+        tests: [not_null]
+
+  - name: agg_period_summaries
+    description: >
+      One row per bank statement period per account. Joins statement-level metadata
+      (opening/closing balances) with aggregated transaction totals for that period.
+    columns:
+      - name: period_start
+        tests: [not_null]
+      - name: period_end
+        tests: [not_null]
+      - name: net_change
+        description: Closing balance minus opening balance for the period.
+
+  - name: agg_expense_trends
+    description: >
+      Monthly expense totals broken down by spending category, with MoM and YoY
+      percentage changes. Use the seeds/transaction_categories.csv to improve
+      category coverage.
+    columns:
+      - name: month
+        tests: [not_null]
+      - name: category
+        tests: [not_null]
+      - name: total_expense
+        description: Sum of absolute expense amounts for this month and category.
+      - name: mom_pct_change
+        description: Month-over-month % change in expenses for this category.
+      - name: yoy_pct_change
+        description: Year-over-year % change (same month, prior year) for this category.

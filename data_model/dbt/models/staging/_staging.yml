@@ -1,0 +1,64 @@
+version: 2
+
+models:
+  - name: stg_transactions
+    description: >
+      Unified transaction ledger combining bank_transactions and tansakcije_09_19
+      into a single consistent schema. One row per transaction line item.
+    columns:
+      - name: transaction_id
+        description: Surrogate ID (source table primary key cast to text).
+        tests: [not_null]
+      - name: source_table
+        description: Which raw table the row originated from.
+        tests:
+          - accepted_values:
+              values: ["bank_transactions", "tansakcije_09_19"]
+      - name: transaction_date
+        description: Date the transaction occurred.
+        tests: [not_null]
+      - name: processing_date
+        description: Date the transaction was processed by the bank.
+      - name: amount_bam
+        description: Absolute transaction amount in BAM.
+      - name: net_amount_bam
+        description: Signed amount in BAM. Positive = income, negative = expense.
+      - name: running_balance
+        description: Account balance immediately after this transaction. NULL for older source table.
+      - name: description
+        description: Cleaned transaction description text.
+      - name: currency
+        description: Transaction currency code (e.g. BAM, EUR, USD).
+      - name: account_number
+        description: Account number in local bank format.
+      - name: iban
+        description: IBAN. NULL for older source table.
+      - name: transaction_group
+        description: Transaction type/group code as provided by the bank.
+      - name: period_start
+        description: Start of the bank statement period. NULL for older source table.
+      - name: period_end
+        description: End of the bank statement period. NULL for older source table.
+
+  - name: stg_bank_statements
+    description: >
+      One row per unique bank statement period per account. Contains opening/closing
+      balances and credit limits as reported on each statement.
+    columns:
+      - name: period_start
+        description: First day of the statement period.
+        tests: [not_null]
+      - name: period_end
+        description: Last day of the statement period.
+        tests: [not_null]
+      - name: account_number
+        description: Account number in local bank format.
+        tests: [not_null]
+      - name: opening_balance
+        description: Account balance at the start of the period.
+      - name: closing_balance
+        description: Account balance at the end of the period.
+      - name: net_change
+        description: Closing balance minus opening balance.
+      - name: credit_limit
+        description: Approved overdraft limit at time of statement.
