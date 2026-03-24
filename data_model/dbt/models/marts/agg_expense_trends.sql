@@ -34,13 +34,13 @@ select
         partition by category order by month
     )                                                   as prev_month_expense,
     round(
-        100.0 * (
+        (100.0 * (
             total_expense
             - lag(total_expense, 1) over (partition by category order by month)
         ) / nullif(
             lag(total_expense, 1) over (partition by category order by month),
             0
-        ),
+        ))::numeric,
         2
     )                                                   as mom_pct_change,
 
@@ -49,13 +49,13 @@ select
         partition by category order by month
     )                                                   as prev_year_expense,
     round(
-        100.0 * (
+        (100.0 * (
             total_expense
             - lag(total_expense, 12) over (partition by category order by month)
         ) / nullif(
             lag(total_expense, 12) over (partition by category order by month),
             0
-        ),
+        ))::numeric,
         2
     )                                                   as yoy_pct_change
 

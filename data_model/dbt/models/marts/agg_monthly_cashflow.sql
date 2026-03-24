@@ -30,15 +30,15 @@ select
     -- Month-over-month
     lag(net_cashflow) over (order by month)             as prev_month_net_cashflow,
     round(
-        100.0 * (net_cashflow - lag(net_cashflow) over (order by month))
-            / nullif(abs(lag(net_cashflow) over (order by month)), 0),
+        (100.0 * (net_cashflow - lag(net_cashflow) over (order by month))
+            / nullif(abs(lag(net_cashflow) over (order by month)), 0))::numeric,
         2
     )                                                   as mom_pct_change,
 
     lag(total_expense) over (order by month)            as prev_month_expense,
     round(
-        100.0 * (total_expense - lag(total_expense) over (order by month))
-            / nullif(lag(total_expense) over (order by month), 0),
+        (100.0 * (total_expense - lag(total_expense) over (order by month))
+            / nullif(lag(total_expense) over (order by month), 0))::numeric,
         2
     )                                                   as mom_expense_pct_change
 

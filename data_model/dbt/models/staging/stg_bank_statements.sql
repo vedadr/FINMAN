@@ -9,8 +9,8 @@
 with ranked as (
 
     select
-        period_od                       as period_start,
-        period_do                       as period_end,
+        to_date(period_od, 'DD-MM-YYYY') as period_start,
+        to_date(period_do, 'DD-MM-YYYY') as period_end,
         broj_racuna                     as account_number,
         iban,
         prethodno_stanje                as opening_balance,

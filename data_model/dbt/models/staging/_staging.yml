@@ -13,7 +13,8 @@ models:
         description: Which raw table the row originated from.
         tests:
           - accepted_values:
-              values: ["bank_transactions", "tansakcije_09_19"]
+              arguments:
+                values: ["bank_transactions", "tansakcije_09_19"]
       - name: transaction_date
         description: Date the transaction occurred.
         tests: [not_null]

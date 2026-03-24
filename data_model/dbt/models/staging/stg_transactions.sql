@@ -7,8 +7,8 @@ with bank_transactions as (
     select
         id::text                        as transaction_id,
         'bank_transactions'             as source_table,
-        datum_transakcije::date         as transaction_date,
-        datum_obrade::date              as processing_date,
+        to_date(datum_transakcije, 'DD-MM-YYYY') as transaction_date,
+        to_date(datum_obrade,     'DD-MM-YYYY') as processing_date,
         iznos_transakcije               as amount_bam,
         uplata_trosak_km                as net_amount_bam,
         saldo_racuna                    as running_balance,
@@ -17,8 +17,8 @@ with bank_transactions as (
         broj_racuna                     as account_number,
         iban,
         grupa                           as transaction_group,
-        period_od                       as period_start,
-        period_do                       as period_end,
+        to_date(period_od, 'DD-MM-YYYY') as period_start,
+        to_date(period_do, 'DD-MM-YYYY') as period_end,
         created_at
 
     from {{ source('raw', 'bank_transactions') }}
