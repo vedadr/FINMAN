@@ -131,13 +131,28 @@ THREAD_CONFIG = {"configurable": {"thread_id": st.session_state.thread_id}}
 
 # ── Message helpers ───────────────────────────────────────────────────────────
 
-def add_message(role: str, content: str, figure: str | None = None, dataframe_json: str | None = None):
+def add_message(role: str, content: str, figure: str | None = None):
     st.session_state.messages.append({
         "role": role,
         "content": content,
         "figure": figure,
-        "dataframe_json": dataframe_json,
     })
+
+
+def _generate_answer(user_query: str, result_json: str) -> str:
+    from langchain_openai import ChatOpenAI
+    from langchain_core.messages import SystemMessage, HumanMessage as _HM
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    response = llm.invoke([
+        SystemMessage(content=(
+            "You are a financial data assistant. The user asked a question and a database query was run. "
+            "Based on the result (JSON), write ONE concise sentence that directly answers the question. "
+            "Format numbers clearly (e.g. €51.90 or $1,234.56). "
+            "Never mention SQL, JSON, or databases."
+        )),
+        _HM(content=f"Question: {user_query}\n\nResult: {result_json}"),
+    ])
+    return response.content.strip()
 
 # ── Graph invocation helpers ──────────────────────────────────────────────────
 
@@ -257,12 +272,10 @@ def _run_query(user_query: str):
     if sql:
         parts.append(f"**Generated SQL:**\n```sql\n{sql}\n```")
     if result_json:
-        import pandas as pd
-        row_count = len(pd.read_json(result_json, orient="records"))
-        parts.append(f"**Result:** {row_count} row(s) returned.")
+        parts.append(_generate_answer(user_query, result_json))
 
     content = "\n\n".join(parts) if parts else "Query returned no results."
-    add_message("assistant", content, figure=viz_json, dataframe_json=result_json)
+    add_message("assistant", content, figure=viz_json)
 
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
@@ -319,9 +332,6 @@ for msg in st.session_state.messages:
         if msg.get("figure"):
             fig = go.Figure(json.loads(msg["figure"]))
             st.plotly_chart(fig, use_container_width=True)
-        if msg.get("dataframe_json"):
-            import pandas as pd
-            st.dataframe(pd.read_json(msg["dataframe_json"], orient="records"), use_container_width=True)
 
 
 # ── Auto-trigger schema scan on first load ────────────────────────────────────
@@ -373,6 +383,3 @@ if st.session_state.schema_loaded:
             if last.get("figure"):
                 fig = go.Figure(json.loads(last["figure"]))
                 st.plotly_chart(fig, use_container_width=True)
-            if last.get("dataframe_json"):
-                import pandas as pd
-                st.dataframe(pd.read_json(last["dataframe_json"], orient="records"), use_container_width=True)
