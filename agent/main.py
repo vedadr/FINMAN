@@ -13,6 +13,15 @@ import uuid
 import json
 import re
 from pathlib import Path
+import plotly.graph_objects as go
+import streamlit as st
+from dotenv import load_dotenv
+from langchain_core.messages import HumanMessage
+from langgraph.types import Command
+from utils.schema_annotations import save_annotations
+
+load_dotenv()
+
 
 _ASSETS = Path(__file__).parent / "assets"
 
@@ -81,15 +90,6 @@ _THEMES = {
         </style>
     """,
 }
-
-import plotly.graph_objects as go
-import streamlit as st
-from dotenv import load_dotenv
-from langchain_core.messages import HumanMessage
-from langgraph.types import Command
-from utils.schema_annotations import save_annotations
-
-load_dotenv()
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(

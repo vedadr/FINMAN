@@ -42,26 +42,26 @@ It also acts as a living data dictionary: on startup it scans your schema, uses 
 │          │                                            │
 │    schema │ already         no schema yet             │
 │    loaded │◄──────────────────────────────┐           │
-│          │                               │           │
-│          ▼                               ▼           │
-│   ┌─────────────┐              ┌──────────────────┐  │
-│   │sql_generator│              │ schema_scanner   │  │
-│   │  (GPT-4o)  │              │  (GPT-4o +       │  │
-│   └──────┬──────┘              │  Supabase        │  │
-│          │                    │  information_    │  │
-│          ▼                    │  schema)         │  │
-│   ┌─────────────┐              └────────┬─────────┘  │
-│   │data_fetcher │                       │            │
-│   │ (SQL exec)  │◄──retry on error      ▼            │
-│   └──────┬──────┘              ┌──────────────────┐  │
-│          │                    │    clarifier     │  │
-│    viz?  │                    │  (interrupt() ── │  │
-│   yes ▼  │ no                 │   asks user)     │  │
-│   ┌──────────┐  ──► table     └──────────────────┘  │
-│   │visualizer│                                       │
-│   │(GPT-4o + │                                       │
-│   │ Plotly)  │                                       │
-│   └──────────┘                                       │
+│          │                                │           │
+│          ▼                                ▼           │
+│   ┌─────────────┐               ┌──────────────────┐  │
+│   │sql_generator│               │ schema_scanner   │  │
+│   │  (GPT-4o)  │                │  (GPT-4o +       │  │
+│   └──────┬──────┘               │  Supabase        │  │
+│          │                      │  information_    │  │
+│          ▼                      │  schema)         │  │
+│   ┌─────────────┐               └────────┬─────────┘  │
+│   │data_fetcher │                        │            │
+│   │ (SQL exec)  │◄──retry on error       ▼            │
+│   └──────┬──────┘               ┌──────────────────┐  │
+│          │                      │    clarifier     │  │
+│    viz?  │                      │  (interrupt() ── │  │
+│   yes ▼  │ no                   │   asks user)     │  │
+│   ┌──────────┐  ──► table       └──────────────────┘  │
+│   │visualizer│                                        │
+│   │(GPT-4o + │                                        │
+│   │ Plotly)  │                                        │
+│   └──────────┘                                        │
 └───────────────────────────────────────────────────────┘
         │
         │  DataFrame table  /  Plotly chart

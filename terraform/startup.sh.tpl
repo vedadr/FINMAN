@@ -61,6 +61,38 @@ if [ -f "$$APP_DIR/agent/pyproject.toml" ]; then
   echo "[finman] Dependencies installed."
 fi
 
+# ── Install dbt ───────────────────────────────────────────────────────────────
+echo "[finman] Installing dbt-postgres..."
+python3 -m venv /opt/finman/dbt-venv
+/opt/finman/dbt-venv/bin/pip install --quiet dbt-postgres
+chown -R finman:finman /opt/finman/dbt-venv
+echo "[finman] dbt installed: $(/opt/finman/dbt-venv/bin/dbt --version 2>&1 | head -1)"
+
+# ── dbt daily-run wrapper ─────────────────────────────────────────────────────
+cat > /opt/finman/dbt-run.sh << 'DBTEOF'
+#!/bin/bash
+set -euo pipefail
+LOG=/var/log/finman-dbt.log
+echo "--- dbt run $(date -Iseconds) ---" >> "$LOG"
+DBT_DIR=/opt/finman/data_model/dbt
+if [ ! -d "$DBT_DIR" ]; then
+  echo "[dbt] Project not found at $DBT_DIR — skipping." >> "$LOG"
+  exit 0
+fi
+cd "$DBT_DIR"
+/opt/finman/dbt-venv/bin/dbt deps --profiles-dir . >> "$LOG" 2>&1
+/opt/finman/dbt-venv/bin/dbt run  --profiles-dir . --target dev >> "$LOG" 2>&1
+/opt/finman/dbt-venv/bin/dbt test --profiles-dir . --target dev >> "$LOG" 2>&1
+echo "[dbt] Run complete." >> "$LOG"
+DBTEOF
+chmod +x /opt/finman/dbt-run.sh
+chown finman:finman /opt/finman/dbt-run.sh
+
+# ── dbt cron job (daily at 02:00 UTC) ────────────────────────────────────────
+(crontab -u finman -l 2>/dev/null || true; echo "0 2 * * * /opt/finman/dbt-run.sh") \
+  | crontab -u finman -
+echo "[finman] dbt cron job installed (daily at 02:00 UTC)."
+
 # ── Systemd service ───────────────────────────────────────────────────────────
 cat > /etc/systemd/system/finman.service << 'SVCEOF'
 [Unit]
